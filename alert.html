@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DDoS Detection Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h2 { margin-top: 30px; }
+        input, button { margin: 5px 0; padding: 5px; }
+        textarea { width: 100%; height: 200px; margin-top: 10px; }
+        .section { margin-bottom: 40px; }
+    </style>
+</head>
+<body>
+    <h1>DDoS Detection Dashboard</h1>
+
+    <div class="section">
+        <button onclick="toggleDetection()">Start/Stop Detection</button>
+        <p id="status">Status: Loading...</p>
+    </div>
+
+    <div class="section">
+        <h2>Detected Alerts</h2>
+        <ul id="alerts"></ul>
+    </div>
+
+    <div class="section">
+        <h2>Mark IP as False Positive</h2>
+        <input type="text" id="fp_ip" placeholder="Enter IP">
+        <button onclick="requestOtp('fp')">Request OTP</button>
+    </div>
+
+    <div class="section">
+        <h2>Confirm IP as Malicious</h2>
+        <input type="text" id="mal_ip" placeholder="Enter IP">
+        <button onclick="requestOtp('malicious')">Request OTP</button>
+    </div>
+
+    <div class="section">
+        <h2>Verify OTP</h2>
+        <input type="text" id="otp_ip" placeholder="Enter IP">
+        <input type="text" id="otp_code" placeholder="Enter OTP">
+        <button onclick="verifyOtp()">Verify OTP</button>
+        <p id="otp_result"></p>
+    </div>
+
+    <div class="section">
+        <h2>Remove IP Classification</h2>
+        <input type="text" id="remove_ip" placeholder="Enter IP">
+        <button onclick="removeIp('fp')">Remove False Positive</button>
+        <button onclick="removeIp('malicious')">Remove Malicious IP</button>
+        <p id="remove_result"></p>
+    </div>
+
+    <script>
+        function toggleDetection() {
+            fetch('/api/toggle_detection', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.status);
+                    updateStatus();
+                });
+        }
+
+        function updateStatus() {
+            fetch('/api/detection_status')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('status').textContent = "Status: " + (data.is_running ? "Running" : "Stopped");
+                });
+        }
+
+        function loadAlerts() {
+            fetch('/api/alerts')
+                .then(res => res.json())
+                .then(data => {
+                    const ul = document.getElementById('alerts');
+                    ul.innerHTML = '';
+                    data.alerts.forEach(alert => {
+                        const li = document.createElement('li');
+                        li.textContent = `[${alert.timestamp}] ${alert.message}`;
+                        ul.appendChild(li);
+                    });
+                });
+        }
+
+        function requestOtp(type) {
+            const ip = document.getElementById(type === 'fp' ? 'fp_ip' : 'mal_ip').value;
+            fetch(`/api/request_otp_${type}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip })
+            })
+            .then(res => res.json())
+            .then(data => alert(data.message));
+        }
+
+        function verifyOtp() {
+            const ip = document.getElementById('otp_ip').value;
+            const otp = document.getElementById('otp_code').value;
+            fetch('/api/verify_otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip, otp })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('otp_result').textContent = data.message || data.error;
+                loadAlerts();
+            });
+        }
+
+        function removeIp(type) {
+            const ip = document.getElementById('remove_ip').value;
+            fetch(`/api/remove_ip`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip, type })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('remove_result').textContent = data.message || data.error;
+            });
+        }
+
+        updateStatus();
+        loadAlerts();
+        setInterval(loadAlerts, 5000);
+    </script>
+</body>
+</html>
+

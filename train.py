@@ -24,7 +24,7 @@ PCAP_PATH = r"filepath"
 CSV_PATH = r"filepath"
 MODEL_PATH = "save the model"
 SCALER_PATH = "save the scaler"
-TEST_SIZE = 0.5
+TEST_SIZE = 0.8
 RANDOM_STATE = 42
 MAX_PCAP_PACKETS = 5000
 

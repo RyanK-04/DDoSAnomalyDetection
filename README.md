@@ -142,14 +142,14 @@ The interface provides controls and status updates:
 * **Go to Grafana Dashboard**: This is where you would link to your configured Grafana dashboard for full monitoring.
 
 ## **Monitoring with Prometheus and Grafana**
-The Flask application exposes Prometheus metrics at https://localhost:5000/metrics.
+The Flask application exposes Prometheus metrics at https://localhost:9090/metrics.
 Configure your Prometheus server to scrape this endpoint. An example prometheus.yml snippet:
 
 ```# prometheus.yml
 scrape_configs:
   - job_name: 'ddos-detector'
     static_configs:
-      - targets: ['localhost:5000']
+      - targets: ['localhost:9090']
 ```
 After Prometheus collects data, you can import the metrics into Grafana to create custom dashboards. Use the exposed metric names (e.g., malicious_packet_count, alerts_triggered, ips_blocked_total, syn_flood_packets_gauge, etc.) to build insightful visualizations.
 
